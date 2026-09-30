@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>动效表情包制作工具</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-icon">✨</span>
+    <div>
+      <h1>动效表情包制作工具</h1>
+      <p>上传图片或输入文字，选个动效，一键导出 GIF</p>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+
+  <!-- ① 素材区 -->
+  <section class="panel material-panel" aria-label="素材输入">
+    <div class="tabs">
+      <button id="tabImage" class="tab active" type="button">🖼️ 图片</button>
+      <button id="tabText" class="tab" type="button">✏️ 文字</button>
+    </div>
+
+    <div id="panelImage" class="tab-body active">
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-hint">
+          <span class="drop-icon">📁</span>
+          <p>点击选择图片，或直接拖拽到这里</p>
+          <p class="muted">支持 JPG / PNG / WebP / GIF</p>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" hidden>
+      </div>
+      <div id="imageControl" class="controls hidden">
+        <div class="thumb-row">
+          <img id="thumbPreview" alt="已选图片预览">
+          <div class="thumb-actions">
+            <button id="btnReplaceImage" class="btn btn-ghost" type="button">更换图片</button>
+            <button id="btnResetImage" class="btn btn-ghost" type="button">重置位置</button>
+          </div>
+        </div>
+        <label class="control-row" for="imgScale">
+          <span>图片大小</span>
+          <input type="range" id="imgScale" min="40" max="200" value="100">
+          <output id="imgScaleVal">100%</output>
+        </label>
+        <p class="hint">在预览区可直接拖拽移动图片、滚动滚轮缩放</p>
+      </div>
+    </div>
+
+    <div id="panelText" class="tab-body">
+      <label class="control-row" for="textInput">
+        <span>文字内容</span>
+      </label>
+      <input type="text" id="textInput" class="text-input" value="Hi~" maxlength="30" placeholder="输入表情包文字（最多30字）">
+      <label class="control-row" for="fontFamily">
+        <span>字体</span>
+        <select id="fontFamily" class="select">
+          <option value="'Microsoft YaHei', '微软雅黑', sans-serif">微软雅黑</option>
+          <option value="'SimHei', '黑体', sans-serif">黑体</option>
+          <option value="'SimSun', '宋体', serif">宋体</option>
+          <option value="'KaiTi', '楷体', serif">楷体</option>
+          <option value="'LiSu', '隶书', serif">隶书</option>
+          <option value="'Arial Black', sans-serif">Arial Black</option>
+          <option value="'Comic Sans MS', 'Comic Sans', sans-serif">Comic Sans</option>
+        </select>
+      </label>
+      <label class="control-row" for="fontSize">
+        <span>字号 <output id="fontSizeVal">64</output></span>
+        <input type="range" id="fontSize" min="24" max="160" value="64">
+      </label>
+      <div class="control-row">
+        <span>文字颜色</span>
+        <input type="color" id="fillColor" value="#FF4D4F">
+      </div>
+      <label class="control-row" for="outlineToggle">
+        <span>白色描边</span>
+        <input type="checkbox" id="outlineToggle" checked>
+      </label>
+      <label class="control-row" for="outlineWidth">
+        <span>描边粗细 <output id="outlineWidthVal">6</output></span>
+        <input type="range" id="outlineWidth" min="1" max="20" value="6">
+      </label>
+    </div>
+  </section>
+
+  <!-- ② 预览区 -->
+  <section class="panel preview-panel" aria-label="预览">
+    <div class="canvas-wrap">
+      <canvas id="previewCanvas" width="480" height="480"></canvas>
+    </div>
+    <div class="preview-meta">
+      <span>预览尺寸</span>
+      <span id="previewSizeMeta">480 × 480 px</span>
+      <span id="currentEffectMeta" class="meta-effect">动效：弹跳</span>
+    </div>
+  </section>
+
+  <!-- ③ 动效与导出区 -->
+  <section class="panel effect-panel" aria-label="动效与导出">
+    <h2>③ 选择动效</h2>
+    <div class="effect-grid" id="effectGrid">
+      <!-- 动效卡片由 JS 生成 -->
+    </div>
+
+    <div class="param-row">
+      <label class="control-row" for="speedRange">
+        <span>速度</span>
+        <input type="range" id="speedRange" min="50" max="200" value="100">
+        <output id="speedVal">1×</output>
+      </label>
+      <label class="control-row" for="amountRange">
+        <span>幅度</span>
+        <input type="range" id="amountRange" min="50" max="150" value="100">
+        <output id="amountVal">1×</output>
+      </label>
+    </div>
+
+    <h2>导出 GIF</h2>
+    <div class="export-row">
+      <label>尺寸
+        <select id="exportSize" class="select">
+          <option value="160">160 × 160</option>
+          <option value="240" selected>240 × 240</option>
+          <option value="320">320 × 320</option>
+          <option value="480">480 × 480</option>
+        </select>
+      </label>
+      <label>帧率
+        <select id="exportFps" class="select">
+          <option value="8">8 fps</option>
+          <option value="12" selected>12 fps</option>
+          <option value="15">15 fps</option>
+          <option value="20">20 fps</option>
+        </select>
+      </label>
+      <label>时长
+        <select id="exportDuration" class="select">
+          <option value="1">1 秒</option>
+          <option value="2" selected>2 秒</option>
+          <option value="3">3 秒</option>
+        </select>
+      </label>
+      <button id="btnExport" class="btn btn-primary" type="button">⬇️ 导出 GIF</button>
+    </div>
+    <div id="exportProgress" class="export-progress hidden">
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+      <span id="progressText">正在编码…</span>
+    </div>
+    <div id="exportResult" class="export-result hidden">
+      <p>✅ GIF 生成成功！</p>
+      <div class="result-actions">
+        <a id="downloadLink" class="btn btn-primary" download="我的表情包.gif">下载 GIF</a>
+        <button id="btnPreviewGif" class="btn btn-ghost" type="button">在页面预览 GIF</button>
+        <button id="btnResetResult" class="btn btn-ghost" type="button">关闭</button>
+      </div>
+      <div id="gifPreviewWrap" class="gif-preview-wrap hidden"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  纯前端本地运行 · 无需登录 · 不上传任何数据
+</footer>
+
+<script src="js/gifenc.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
